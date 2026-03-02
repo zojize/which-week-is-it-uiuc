@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Which Week Is It? — UIUC</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2313294B'/><rect x='4' y='8' width='24' height='20' rx='3' fill='none' stroke='%23FF5F05' stroke-width='2'/><line x1='4' y1='14' x2='28' y2='14' stroke='%23FF5F05' stroke-width='2'/><line x1='10' y1='5' x2='10' y2='11' stroke='%23FF5F05' stroke-width='2' stroke-linecap='round'/><line x1='22' y1='5' x2='22' y2='11' stroke='%23FF5F05' stroke-width='2' stroke-linecap='round'/><text x='16' y='24' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='10' fill='%23FF5F05'>W</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #13294B;
+      color: #FF5F05;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .week-display {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(6rem, 18vw, 16rem);
+      line-height: 1;
+      letter-spacing: 0.04em;
+    }
+
+    .week-display sup {
+      font-size: 0.35em;
+      vertical-align: super;
+      line-height: 0;
+    }
+
+    .semester-info {
+      margin-top: 1.8rem;
+      font-size: clamp(0.85rem, 2vw, 1.15rem);
+      font-weight: 500;
+      color: #C8C6C7;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .off-semester {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 8vw, 6rem);
+      line-height: 1.2;
+      color: #FF5F05;
+    }
+
+    .off-semester-sub {
+      margin-top: 1rem;
+      font-size: clamp(0.85rem, 2vw, 1.15rem);
+      font-weight: 500;
+      color: #C8C6C7;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    const semesters = [
+      { name: 'Summer 2025', year: '2024–2025', start: '2025-05-19', end: '2025-08-07' },
+      { name: 'Fall 2025',   year: '2025–2026', start: '2025-08-25', end: '2025-12-10' },
+      { name: 'Spring 2026', year: '2025–2026', start: '2026-01-20', end: '2026-05-06' },
+      { name: 'Summer 2026', year: '2025–2026', start: '2026-05-18', end: '2026-08-06' },
+      { name: 'Fall 2026',   year: '2026–2027', start: '2026-08-24', end: '2026-12-09' },
+      { name: 'Spring 2027', year: '2026–2027', start: '2027-01-19', end: '2027-05-05' },
+    ];
+
+    function ordinalSuffix(n) {
+      const s = ['th', 'st', 'nd', 'rd'];
+      const v = n % 100;
+      return s[(v - 20) % 10] || s[v] || s[0];
+    }
+
+    function render() {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const app = document.getElementById('app');
+
+      let current = null;
+      for (const sem of semesters) {
+        const start = new Date(sem.start + 'T00:00:00');
+        const end = new Date(sem.end + 'T23:59:59');
+        if (today >= start && today <= end) {
+          current = sem;
+          break;
+        }
+      }
+
+      if (!current) {
+        // Find the next upcoming semester
+        let next = null;
+        for (const sem of semesters) {
+          const start = new Date(sem.start + 'T00:00:00');
+          if (today < start) { next = sem; break; }
+        }
+        const msg = next ? `Classes resume ${next.start}` : 'Enjoy the break';
+        app.innerHTML = `
+          <div class="off-semester">Not in session</div>
+          <div class="off-semester-sub">${msg}</div>
+        `;
+        return;
+      }
+
+      const start = new Date(current.start + 'T00:00:00');
+      const diffMs = today - start;
+      const diffDays = Math.floor(diffMs / 86400000);
+      const weekNum = Math.floor(diffDays / 7) + 1;
+      const suffix = ordinalSuffix(weekNum);
+
+      app.innerHTML = `
+        <div class="week-display">${weekNum}<sup>${suffix}</sup> Week</div>
+        <div class="semester-info">${current.name} &middot; ${current.year}</div>
+      `;
+    }
+
+    render();
+  </script>
+</body>
+</html>
