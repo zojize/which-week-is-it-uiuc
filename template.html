@@ -95,6 +95,20 @@
       return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }));
     }
 
+    function parseLocal(s) {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function weekOf(semStart, date) {
+      const start = parseLocal(semStart);
+      const dow = start.getDay();
+      const mondayOffset = dow === 0 ? 6 : dow - 1;
+      const firstMonday = new Date(start);
+      firstMonday.setDate(firstMonday.getDate() - mondayOffset);
+      return Math.floor((date - firstMonday) / 86400000 / 7) + 1;
+    }
+
     function render() {
       const cst = getCST();
       const today = new Date(cst.getFullYear(), cst.getMonth(), cst.getDate());
@@ -102,15 +116,13 @@
 
       let current = null;
       for (const sem of semesters) {
-        const start = new Date(sem.start + 'T00:00:00');
-        const end = new Date(sem.end + 'T23:59:59');
+        const start = parseLocal(sem.start);
+        const end = parseLocal(sem.end);
         if (today >= start && today <= end) { current = sem; break; }
       }
 
       if (current) {
-        const start = new Date(current.start + 'T00:00:00');
-        const diffDays = Math.floor((today - start) / 86400000);
-        const weekNum = Math.floor(diffDays / 7) + 1;
+        const weekNum = weekOf(current.start, today);
         const suffix = ordinalSuffix(weekNum);
         document.title = `${weekNum}${suffix} Week \u2014 UIUC`;
         app.innerHTML =
@@ -119,7 +131,7 @@
       } else {
         let next = null;
         for (const sem of semesters) {
-          if (today < new Date(sem.start + 'T00:00:00')) { next = sem; break; }
+          if (today < parseLocal(sem.start)) { next = sem; break; }
         }
         const msg = next ? `Classes resume ${next.start}` : 'Enjoy the break';
         document.title = 'Which Week Is It? \u2014 UIUC';

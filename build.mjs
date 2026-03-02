@@ -16,28 +16,41 @@ function ordinalSuffix(n) {
   return s[(v - 20) % 10] || s[v] || s[0];
 }
 
-// Use CST (UTC-6) to match UIUC's timezone
+// Parse YYYY-MM-DD as local (Chicago) time, not UTC
+function parseLocal(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+// TZ=America/Chicago is set, so local time is CST/CDT
 const now = new Date();
-const cst = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-const today = new Date(cst.getFullYear(), cst.getMonth(), cst.getDate());
+const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
 let content = '';
 let title = 'Which Week Is It? — UIUC';
 
 let current = null;
 for (const sem of semesters) {
-  const start = new Date(sem.start + 'T00:00:00');
-  const end = new Date(sem.end + 'T23:59:59');
+  const start = parseLocal(sem.start);
+  const end = parseLocal(sem.end);
   if (today >= start && today <= end) {
     current = sem;
     break;
   }
 }
 
+// Align to the Monday of the week containing the semester start
+function weekOf(semStart, date) {
+  const start = parseLocal(semStart);
+  const dow = start.getDay(); // 0=Sun, 1=Mon, ...
+  const mondayOffset = dow === 0 ? 6 : dow - 1;
+  const firstMonday = new Date(start);
+  firstMonday.setDate(firstMonday.getDate() - mondayOffset);
+  return Math.floor((date - firstMonday) / 86400000 / 7) + 1;
+}
+
 if (current) {
-  const start = new Date(current.start + 'T00:00:00');
-  const diffDays = Math.floor((today - start) / 86400000);
-  const weekNum = Math.floor(diffDays / 7) + 1;
+  const weekNum = weekOf(current.start, today);
   const suffix = ordinalSuffix(weekNum);
   title = `${weekNum}${suffix} Week — UIUC`;
   content = `<div class="week-display">${weekNum}<sup>${suffix}</sup> Week</div>
@@ -45,7 +58,7 @@ if (current) {
 } else {
   let next = null;
   for (const sem of semesters) {
-    if (today < new Date(sem.start + 'T00:00:00')) { next = sem; break; }
+    if (today < parseLocal(sem.start)) { next = sem; break; }
   }
   const msg = next ? `Classes resume ${next.start}` : 'Enjoy the break';
   content = `<div class="off-semester">Not in session</div>
@@ -59,9 +72,7 @@ let ogDescription = '';
 let ogMainText = '';
 let ogSubText = '';
 if (current) {
-  const start = new Date(current.start + 'T00:00:00');
-  const diffDays = Math.floor((today - start) / 86400000);
-  const weekNum = Math.floor(diffDays / 7) + 1;
+  const weekNum = weekOf(current.start, today);
   const suffix = ordinalSuffix(weekNum);
   ogMainText = `${weekNum}${suffix} Week`;
   ogSubText = `${current.name} · ${current.year}`;

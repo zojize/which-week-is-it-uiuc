@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>6th Week — UIUC</title>
-  <meta property="og:title" content="6th Week — UIUC">
-  <meta property="og:description" content="It's the 6th week of Spring 2026 at UIUC.">
+  <title>7th Week — UIUC</title>
+  <meta property="og:title" content="7th Week — UIUC">
+  <meta property="og:description" content="It's the 7th week of Spring 2026 at UIUC.">
   <meta property="og:image" content="https://zojize.github.io/which-week-is-it-uiuc/og.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
@@ -73,7 +73,7 @@
   </style>
 </head>
 <body>
-  <div id="app"><div class="week-display">6<sup>th</sup> Week</div>
+  <div id="app"><div class="week-display">7<sup>th</sup> Week</div>
     <div class="semester-info">Spring 2026 &middot; 2025–2026</div></div>
 
   <script>
@@ -96,6 +96,20 @@
       return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }));
     }
 
+    function parseLocal(s) {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function weekOf(semStart, date) {
+      const start = parseLocal(semStart);
+      const dow = start.getDay();
+      const mondayOffset = dow === 0 ? 6 : dow - 1;
+      const firstMonday = new Date(start);
+      firstMonday.setDate(firstMonday.getDate() - mondayOffset);
+      return Math.floor((date - firstMonday) / 86400000 / 7) + 1;
+    }
+
     function render() {
       const cst = getCST();
       const today = new Date(cst.getFullYear(), cst.getMonth(), cst.getDate());
@@ -103,15 +117,13 @@
 
       let current = null;
       for (const sem of semesters) {
-        const start = new Date(sem.start + 'T00:00:00');
-        const end = new Date(sem.end + 'T23:59:59');
+        const start = parseLocal(sem.start);
+        const end = parseLocal(sem.end);
         if (today >= start && today <= end) { current = sem; break; }
       }
 
       if (current) {
-        const start = new Date(current.start + 'T00:00:00');
-        const diffDays = Math.floor((today - start) / 86400000);
-        const weekNum = Math.floor(diffDays / 7) + 1;
+        const weekNum = weekOf(current.start, today);
         const suffix = ordinalSuffix(weekNum);
         document.title = `${weekNum}${suffix} Week \u2014 UIUC`;
         app.innerHTML =
@@ -120,7 +132,7 @@
       } else {
         let next = null;
         for (const sem of semesters) {
-          if (today < new Date(sem.start + 'T00:00:00')) { next = sem; break; }
+          if (today < parseLocal(sem.start)) { next = sem; break; }
         }
         const msg = next ? `Classes resume ${next.start}` : 'Enjoy the break';
         document.title = 'Which Week Is It? \u2014 UIUC';
@@ -145,7 +157,7 @@
     // Static content is already rendered; only re-render if stale
     const cst = getCST();
     const today = new Date(cst.getFullYear(), cst.getMonth(), cst.getDate());
-    const builtDate = '2026-03-01';
+    const builtDate = '2026-03-02';
     if (builtDate !== today.toISOString().slice(0, 10)) render();
     scheduleNextUpdate();
   </script>
