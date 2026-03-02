@@ -51,12 +51,42 @@ if (current) {
     <div class="off-semester-sub">${msg}</div>`;
 }
 
+const BASE_URL = 'https://zojize.github.io/which-week-is-it-uiuc';
+
+// Generate OG image as SVG
+let ogDescription = '';
+let ogMainText = '';
+let ogSubText = '';
+if (current) {
+  const start = new Date(current.start + 'T00:00:00');
+  const diffDays = Math.floor((today - start) / 86400000);
+  const weekNum = Math.floor(diffDays / 7) + 1;
+  const suffix = ordinalSuffix(weekNum);
+  ogMainText = `${weekNum}${suffix} Week`;
+  ogSubText = `${current.name} · ${current.year}`;
+  ogDescription = `It's the ${weekNum}${suffix} week of ${current.name} at UIUC.`;
+} else {
+  ogMainText = 'Not in session';
+  ogSubText = '';
+  ogDescription = 'UIUC is not currently in session.';
+}
+
+const ogSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#13294B"/>
+  <text x="600" y="${ogSubText ? 290 : 330}" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="160" fill="#FF5F05" letter-spacing="4">${ogMainText}</text>
+  ${ogSubText ? `<text x="600" y="400" text-anchor="middle" font-family="sans-serif" font-weight="500" font-size="40" fill="#C8C6C7" letter-spacing="4">${ogSubText}</text>` : ''}
+  <text x="600" y="560" text-anchor="middle" font-family="sans-serif" font-size="28" fill="#707372" letter-spacing="2">WHICH WEEK IS IT? — UIUC</text>
+</svg>`;
+writeFileSync('og.svg', ogSvg);
+
 const template = readFileSync('template.html', 'utf-8');
 const buildDate = today.toISOString().slice(0, 10);
 const html = template
-  .replace('{{TITLE}}', title)
-  .replace('{{CONTENT}}', content)
-  .replace('{{BUILD_DATE}}', buildDate);
+  .replaceAll('{{TITLE}}', title)
+  .replaceAll('{{CONTENT}}', content)
+  .replaceAll('{{BUILD_DATE}}', buildDate)
+  .replaceAll('{{OG_DESCRIPTION}}', ogDescription)
+  .replaceAll('{{BASE_URL}}', BASE_URL);
 
 writeFileSync('index.html', html);
 console.log(`Built index.html: ${title}`);
