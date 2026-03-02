@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs';
+import { Resvg } from '@resvg/resvg-js';
 
 const semesters = [
   { name: 'Summer 2025', year: '2024–2025', start: '2025-05-19', end: '2025-08-07' },
@@ -73,11 +74,15 @@ if (current) {
 
 const ogSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="#13294B"/>
-  <text x="600" y="${ogSubText ? 290 : 330}" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="160" fill="#FF5F05" letter-spacing="4">${ogMainText}</text>
-  ${ogSubText ? `<text x="600" y="400" text-anchor="middle" font-family="sans-serif" font-weight="500" font-size="40" fill="#C8C6C7" letter-spacing="4">${ogSubText}</text>` : ''}
-  <text x="600" y="560" text-anchor="middle" font-family="sans-serif" font-size="28" fill="#707372" letter-spacing="2">WHICH WEEK IS IT? — UIUC</text>
+  <text x="600" y="${ogSubText ? 290 : 330}" text-anchor="middle" font-family="'Bebas Neue'" font-size="160" fill="#FF5F05" letter-spacing="4">${ogMainText}</text>
+  ${ogSubText ? `<text x="600" y="400" text-anchor="middle" font-family="'Bebas Neue'" font-size="40" fill="#C8C6C7" letter-spacing="4">${ogSubText}</text>` : ''}
+  <text x="600" y="560" text-anchor="middle" font-family="'Bebas Neue'" font-size="28" fill="#707372" letter-spacing="2">WHICH WEEK IS IT? — UIUC</text>
 </svg>`;
-writeFileSync('og.svg', ogSvg);
+const resvg = new Resvg(ogSvg, {
+  fitTo: { mode: 'width', value: 1200 },
+  font: { fontFiles: ['fonts/BebasNeue-Regular.ttf'], loadSystemFonts: false },
+});
+writeFileSync('og.png', resvg.render().asPng());
 
 const template = readFileSync('template.html', 'utf-8');
 const buildDate = today.toISOString().slice(0, 10);
