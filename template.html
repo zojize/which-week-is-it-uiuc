@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>6th Week — UIUC</title>
+  <title>{{TITLE}}</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2313294B'/><rect x='4' y='8' width='24' height='20' rx='3' fill='none' stroke='%23FF5F05' stroke-width='2'/><line x1='4' y1='14' x2='28' y2='14' stroke='%23FF5F05' stroke-width='2'/><line x1='10' y1='5' x2='10' y2='11' stroke='%23FF5F05' stroke-width='2' stroke-linecap='round'/><line x1='22' y1='5' x2='22' y2='11' stroke='%23FF5F05' stroke-width='2' stroke-linecap='round'/><text x='16' y='24' text-anchor='middle' font-family='sans-serif' font-weight='bold' font-size='10' fill='%23FF5F05'>W</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,8 +64,7 @@
   </style>
 </head>
 <body>
-  <div id="app"><div class="week-display">6<sup>th</sup> Week</div>
-    <div class="semester-info">Spring 2026 &middot; 2025–2026</div></div>
+  <div id="app">{{CONTENT}}</div>
 
   <script>
     const semesters = [
@@ -136,7 +135,7 @@
     // Static content is already rendered; only re-render if stale
     const cst = getCST();
     const today = new Date(cst.getFullYear(), cst.getMonth(), cst.getDate());
-    const builtDate = '2026-03-01';
+    const builtDate = '{{BUILD_DATE}}';
     if (builtDate !== today.toISOString().slice(0, 10)) render();
     scheduleNextUpdate();
   </script>
