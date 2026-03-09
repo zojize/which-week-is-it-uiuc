@@ -2,12 +2,20 @@ import { readFileSync, writeFileSync } from 'fs';
 import { Resvg } from '@resvg/resvg-js';
 
 const semesters = [
-  { name: 'Summer 2025', year: '2024–2025', start: '2025-05-19', end: '2025-08-07' },
-  { name: 'Fall 2025',   year: '2025–2026', start: '2025-08-25', end: '2025-12-10' },
-  { name: 'Spring 2026', year: '2025–2026', start: '2026-01-20', end: '2026-05-06' },
-  { name: 'Summer 2026', year: '2025–2026', start: '2026-05-18', end: '2026-08-06' },
-  { name: 'Fall 2026',   year: '2026–2027', start: '2026-08-24', end: '2026-12-09' },
-  { name: 'Spring 2027', year: '2026–2027', start: '2027-01-19', end: '2027-05-05' },
+  { name: 'Summer 2025', year: '2024–2025', start: '2025-05-19', end: '2025-08-07', breaks: [] },
+  { name: 'Fall 2025',   year: '2025–2026', start: '2025-08-25', end: '2025-12-10', breaks: [
+    { name: 'Fall Break',   start: '2025-11-22', end: '2025-11-30' },
+  ]},
+  { name: 'Spring 2026', year: '2025–2026', start: '2026-01-20', end: '2026-05-06', breaks: [
+    { name: 'Spring Break', start: '2026-03-14', end: '2026-03-22' },
+  ]},
+  { name: 'Summer 2026', year: '2025–2026', start: '2026-05-18', end: '2026-08-06', breaks: [] },
+  { name: 'Fall 2026',   year: '2026–2027', start: '2026-08-24', end: '2026-12-09', breaks: [
+    { name: 'Fall Break',   start: '2026-11-21', end: '2026-11-29' },
+  ]},
+  { name: 'Spring 2027', year: '2026–2027', start: '2027-01-19', end: '2027-05-05', breaks: [
+    // Spring Break dates TBD; calendar not yet published
+  ]},
 ];
 
 function ordinalSuffix(n) {
@@ -49,12 +57,23 @@ function weekOf(semStart, date) {
   return Math.floor((date - firstMonday) / 86400000 / 7) + 1;
 }
 
+// Check if today falls within a scheduled break
+const currentBreak = current?.breaks.find(
+  br => today >= parseLocal(br.start) && today <= parseLocal(br.end)
+) ?? null;
+
 if (current) {
-  const weekNum = weekOf(current.start, today);
-  const suffix = ordinalSuffix(weekNum);
-  title = `${weekNum}${suffix} Week — UIUC`;
-  content = `<div class="week-display">${weekNum}<sup>${suffix}</sup> Week</div>
+  if (currentBreak) {
+    title = `${currentBreak.name} — UIUC`;
+    content = `<div class="off-semester">${currentBreak.name}</div>
     <div class="semester-info">${current.name} &middot; ${current.year}</div>`;
+  } else {
+    const weekNum = weekOf(current.start, today);
+    const suffix = ordinalSuffix(weekNum);
+    title = `${weekNum}${suffix} Week — UIUC`;
+    content = `<div class="week-display">${weekNum}<sup>${suffix}</sup> Week</div>
+    <div class="semester-info">${current.name} &middot; ${current.year}</div>`;
+  }
 } else {
   let next = null;
   for (const sem of semesters) {
@@ -72,11 +91,17 @@ let ogDescription = '';
 let ogMainText = '';
 let ogSubText = '';
 if (current) {
-  const weekNum = weekOf(current.start, today);
-  const suffix = ordinalSuffix(weekNum);
-  ogMainText = `${weekNum}${suffix} Week`;
-  ogSubText = `${current.name} · ${current.year}`;
-  ogDescription = `It's the ${weekNum}${suffix} week of ${current.name} at UIUC.`;
+  if (currentBreak) {
+    ogMainText = currentBreak.name;
+    ogSubText = `${current.name} · ${current.year}`;
+    ogDescription = `It's ${currentBreak.name} for ${current.name} at UIUC.`;
+  } else {
+    const weekNum = weekOf(current.start, today);
+    const suffix = ordinalSuffix(weekNum);
+    ogMainText = `${weekNum}${suffix} Week`;
+    ogSubText = `${current.name} · ${current.year}`;
+    ogDescription = `It's the ${weekNum}${suffix} week of ${current.name} at UIUC.`;
+  }
 } else {
   ogMainText = 'Not in session';
   ogSubText = '';
