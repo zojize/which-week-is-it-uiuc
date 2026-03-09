@@ -4,7 +4,8 @@
   "description": "A static webpage that shows the current academic week at the University of Illinois Urbana-Champaign.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "repository": {
     "type": "git",
@@ -20,5 +21,9 @@
   "homepage": "https://github.com/zojize/which-week-is-it-uiuc#readme",
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.8.3",
+    "vitest": "^4.0.18"
   }
 }
