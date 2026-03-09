@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "packageManager": "pnpm@10.30.2",
   "bugs": {
     "url": "https://github.com/zojize/which-week-is-it-uiuc/issues"
   },
