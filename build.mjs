@@ -31,14 +31,18 @@ function parseLocal(dateStr) {
   return new Date(y, m - 1, d);
 }
 
-// Align to the Monday of the week containing the semester start
+// Align to the Monday of the week containing the semester start.
+// Use Date.UTC for the day-count arithmetic to avoid DST skewing the result
+// (e.g. spring-forward makes a Monday appear to be 48.96 days instead of 49).
 function weekOf(semStart, date) {
   const start = parseLocal(semStart);
   const dow = start.getDay(); // 0=Sun, 1=Mon, ...
   const mondayOffset = dow === 0 ? 6 : dow - 1;
   const firstMonday = new Date(start);
   firstMonday.setDate(firstMonday.getDate() - mondayOffset);
-  return Math.floor((date - firstMonday) / 86400000 / 7) + 1;
+  const firstMondayUTC = Date.UTC(firstMonday.getFullYear(), firstMonday.getMonth(), firstMonday.getDate());
+  const dateUTC = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.floor((dateUTC - firstMondayUTC) / 86400000 / 7) + 1;
 }
 
 // Exported for testing — uses new Date() internally so the date can be

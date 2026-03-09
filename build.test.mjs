@@ -17,7 +17,9 @@ function weekOf(semStart, date) {
   const mondayOffset = dow === 0 ? 6 : dow - 1;
   const firstMonday = new Date(start);
   firstMonday.setDate(firstMonday.getDate() - mondayOffset);
-  return Math.floor((date - firstMonday) / 86400000 / 7) + 1;
+  const firstMondayUTC = Date.UTC(firstMonday.getFullYear(), firstMonday.getMonth(), firstMonday.getDate());
+  const dateUTC = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.floor((dateUTC - firstMondayUTC) / 86400000 / 7) + 1;
 }
 
 function ordinalSuffix(n) {
@@ -77,8 +79,10 @@ beforeAll(() => { vi.useFakeTimers(); });
 afterAll(() => { vi.useRealTimers(); });
 
 describe.each(semesters)('$name', (sem) => {
+  
   it('shows correct week number and semester for every day', () => {
     const days = eachDay(parseLocal(sem.start), parseLocal(sem.end));
+    const all = [];
 
     for (const day of days) {
       // Control what new Date() returns inside buildContent()
@@ -103,6 +107,8 @@ describe.each(semesters)('$name', (sem) => {
         const semInfo = locator('.semester-info');
         expect(semInfo, `${dateStr}: expected .semester-info element`).not.toBeNull();
         expect(semInfo.textContent, `${dateStr}: semester info`).toContain(sem.name);
+
+        all.push([dateStr, el.textContent]);
       } else {
         // During a regular week the page should show the correct week number
         const el = locator('.week-display');
@@ -116,7 +122,11 @@ describe.each(semesters)('$name', (sem) => {
         const semInfo = locator('.semester-info');
         expect(semInfo, `${dateStr}: expected .semester-info element`).not.toBeNull();
         expect(semInfo.textContent, `${dateStr}: semester info`).toContain(sem.name);
+
+        all.push([dateStr, `${weekNum}${suffix} Week`]);
       }
     }
+
+    expect(all).toMatchSnapshot();
   });
 });
