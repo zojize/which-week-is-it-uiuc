@@ -4,8 +4,9 @@ on:
   push:
     branches: [main]
   schedule:
-    # Every Monday at 00:00 CST (06:00 UTC)
-    - cron: '0 6 * * 1'
+    # Every Monday at midnight Central — both UTC offsets to handle DST
+    - cron: '0 5 * * 1'  # midnight CDT (summer)
+    - cron: '0 6 * * 1'  # midnight CST (winter)
   workflow_dispatch:
 
 permissions:
@@ -18,7 +19,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-schedule:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+    steps:
+      - name: Check if midnight Monday in Central Time
+        id: check
+        run: |
+          HOUR=$(TZ=America/Chicago date +%-H)
+          DAY=$(TZ=America/Chicago date +%u)
+          if [ "$DAY" = "1" ] && [ "$HOUR" -le "1" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Not within the first hour of Monday Central (day=$DAY, hour=$HOUR), skipping."
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
+    needs: [check-schedule]
+    if: always() && (needs.check-schedule.result == 'skipped' || needs.check-schedule.outputs.should_deploy == 'true')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
