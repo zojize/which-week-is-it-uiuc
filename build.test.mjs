@@ -11,7 +11,11 @@ function parseLocal(dateStr) {
   return new Date(y, m - 1, d);
 }
 
-function weekOf(semStart, date) {
+function mondayKey(date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function weekOf(semStart, date, breaks = []) {
   const start = parseLocal(semStart);
   const dow = start.getDay();
   const mondayOffset = dow === 0 ? 6 : dow - 1;
@@ -19,7 +23,29 @@ function weekOf(semStart, date) {
   firstMonday.setDate(firstMonday.getDate() - mondayOffset);
   const firstMondayUTC = Date.UTC(firstMonday.getFullYear(), firstMonday.getMonth(), firstMonday.getDate());
   const dateUTC = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-  return Math.floor((dateUTC - firstMondayUTC) / 86400000 / 7) + 1;
+
+  const skippedBreakWeeks = new Set();
+  for (const br of breaks) {
+    const breakStart = parseLocal(br.start);
+    const breakEnd = parseLocal(br.end);
+    if (breakStart > date) continue;
+
+    const startCursor = breakStart > firstMonday ? breakStart : firstMonday;
+    const endCursor = breakEnd < date ? breakEnd : date;
+    const cursor = new Date(startCursor);
+
+    while (cursor <= endCursor) {
+      const day = cursor.getDay();
+      if (day >= 1 && day <= 5) {
+        const monday = new Date(cursor);
+        monday.setDate(monday.getDate() - (day - 1));
+        skippedBreakWeeks.add(mondayKey(monday));
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+
+  return Math.floor((dateUTC - firstMondayUTC) / 86400000 / 7) + 1 - skippedBreakWeeks.size;
 }
 
 function ordinalSuffix(n) {
@@ -114,7 +140,7 @@ describe.each(semesters)('$name', (sem) => {
         const el = locator('.week-display');
         expect(el, `${dateStr}: expected .week-display element`).not.toBeNull();
 
-        const weekNum = weekOf(sem.start, day);
+        const weekNum = weekOf(sem.start, day, sem.breaks);
         const suffix = ordinalSuffix(weekNum);
         // textContent of "7<sup>th</sup> Week" → "7th Week"
         expect(el.textContent, `${dateStr}: week number`).toContain(`${weekNum}${suffix}`);
