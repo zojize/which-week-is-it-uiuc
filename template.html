@@ -76,37 +76,11 @@
   <div id="app">{{CONTENT}}</div>
 
   <script>
-    const semesters = [
-      { name: 'Summer 2025', year: '2024\u20132025', start: '2025-05-19', end: '2025-08-07' },
-      { name: 'Fall 2025',   year: '2025\u20132026', start: '2025-08-25', end: '2025-12-10' },
-      { name: 'Spring 2026', year: '2025\u20132026', start: '2026-01-20', end: '2026-05-06' },
-      { name: 'Summer 2026', year: '2025\u20132026', start: '2026-05-18', end: '2026-08-06' },
-      { name: 'Fall 2026',   year: '2026\u20132027', start: '2026-08-24', end: '2026-12-09' },
-      { name: 'Spring 2027', year: '2026\u20132027', start: '2027-01-19', end: '2027-05-05' },
-    ];
-
-    function ordinalSuffix(n) {
-      const s = ['th', 'st', 'nd', 'rd'];
-      const v = n % 100;
-      return s[(v - 20) % 10] || s[v] || s[0];
-    }
+    // Semester data and date helpers — injected from lib.mjs at build time
+    {{SHARED_LIB}}
 
     function getCST() {
       return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }));
-    }
-
-    function parseLocal(s) {
-      const [y, m, d] = s.split('-').map(Number);
-      return new Date(y, m - 1, d);
-    }
-
-    function weekOf(semStart, date) {
-      const start = parseLocal(semStart);
-      const dow = start.getDay();
-      const mondayOffset = dow === 0 ? 6 : dow - 1;
-      const firstMonday = new Date(start);
-      firstMonday.setDate(firstMonday.getDate() - mondayOffset);
-      return Math.floor((date - firstMonday) / 86400000 / 7) + 1;
     }
 
     function render() {
@@ -122,12 +96,22 @@
       }
 
       if (current) {
-        const weekNum = weekOf(current.start, today);
-        const suffix = ordinalSuffix(weekNum);
-        document.title = `${weekNum}${suffix} Week \u2014 UIUC`;
-        app.innerHTML =
-          `<div class="week-display">${weekNum}<sup>${suffix}</sup> Week</div>` +
-          `<div class="semester-info">${current.name} \u00b7 ${current.year}</div>`;
+        const currentBreak = current.breaks.find(
+          br => today >= parseLocal(br.start) && today <= parseLocal(br.end)
+        ) ?? null;
+        if (currentBreak) {
+          document.title = `${currentBreak.name} \u2014 UIUC`;
+          app.innerHTML =
+            `<div class="off-semester">${currentBreak.name}</div>` +
+            `<div class="semester-info">${current.name} \u00b7 ${current.year}</div>`;
+        } else {
+          const weekNum = weekOf(current.start, today, current.breaks);
+          const suffix = ordinalSuffix(weekNum);
+          document.title = `${weekNum}${suffix} Week \u2014 UIUC`;
+          app.innerHTML =
+            `<div class="week-display">${weekNum}<sup>${suffix}</sup> Week</div>` +
+            `<div class="semester-info">${current.name} \u00b7 ${current.year}</div>`;
+        }
       } else {
         let next = null;
         for (const sem of semesters) {

@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { buildContent } from './build.mjs';
+import { semesters } from './lib.mjs';
 
 // ---------------------------------------------------------------------------
-// Helpers — mirror the logic in build.mjs so we can compute expected values
-// independently of the code under test.
+// Helpers — independent reimplementations so test correctness does not depend
+// on the same code paths as the code under test.
 // ---------------------------------------------------------------------------
 
 function parseLocal(dateStr) {
@@ -75,27 +76,7 @@ function locator(selector) {
   return document.querySelector(selector);
 }
 
-// ---------------------------------------------------------------------------
-// Semester data — kept in sync with build.mjs
-// ---------------------------------------------------------------------------
-
-const semesters = [
-  { name: 'Summer 2025', year: '2024–2025', start: '2025-05-19', end: '2025-08-07', breaks: [] },
-  {
-    name: 'Fall 2025', year: '2025–2026', start: '2025-08-25', end: '2025-12-10',
-    breaks: [{ name: 'Fall Break', start: '2025-11-22', end: '2025-11-30' }],
-  },
-  {
-    name: 'Spring 2026', year: '2025–2026', start: '2026-01-20', end: '2026-05-06',
-    breaks: [{ name: 'Spring Break', start: '2026-03-14', end: '2026-03-22' }],
-  },
-  { name: 'Summer 2026', year: '2025–2026', start: '2026-05-18', end: '2026-08-06', breaks: [] },
-  {
-    name: 'Fall 2026', year: '2026–2027', start: '2026-08-24', end: '2026-12-09',
-    breaks: [{ name: 'Fall Break', start: '2026-11-21', end: '2026-11-29' }],
-  },
-  { name: 'Spring 2027', year: '2026–2027', start: '2027-01-19', end: '2027-05-05', breaks: [] },
-];
+// Semester data is imported from lib.mjs — the single source of truth.
 
 // ---------------------------------------------------------------------------
 // Tests
